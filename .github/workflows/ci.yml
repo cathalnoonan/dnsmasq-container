@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build Docker image
+        run: |
+          docker build -t dnsmasq-container .
+
+      - name: Run container (detached)
+        run: |
+          docker run -d \
+            --name dnsmasq \
+            -p 53:53/udp \
+            -p 53:53/tcp \
+            -v $(pwd)/sample/templates:/opt/dnsmasq/templates \
+            dnsmasq-container
+
+      - name: Sleep to allow container to start & healthcheck to run
+        run: |
+          sleep 15
+
+      - name: Check A records
+        run: |
+          [ "$(dig +tcp +short @127.0.0.1 dev.example.com)" = "192.168.0.1" ]
+          [ "$(dig +tcp +short @127.0.0.1 test.example.com)" = "192.168.0.2" ]
+          [ "$(dig +tcp +short @127.0.0.1 prod.example.com)" = "192.168.0.3" ]
+
+      - name: Check CNAME record
+        run: |
+          [ "$(dig +tcp +short @127.0.0.1 dummy.example.com)" = "192.168.0.3" ]
+
+      - name: Check healthcheck status
+        run: |
+          STATUS=$(docker inspect --format='{{json .State.Health.Status}}' dnsmasq)
+          echo "Container health status: $STATUS"
+          [ "$STATUS" = '"healthy"' ]

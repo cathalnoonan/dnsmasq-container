@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - '**'
-
-# Note: GitHub actions uses localhost's port 53 already; so we need to use a different port (i.e. 1053 below)
+  pull_request:
+    branches:
+      - main
 
 jobs:
   ci:

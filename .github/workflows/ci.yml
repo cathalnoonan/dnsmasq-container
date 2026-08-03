@@ -32,13 +32,29 @@ jobs:
 
       - name: Check A records
         run: |
-          [ "$(dig -p 1053 +tcp +short @127.0.0.1 dev.example.com)" = "192.168.0.1" ]
-          [ "$(dig -p 1053 +tcp +short @127.0.0.1 test.example.com)" = "192.168.0.2" ]
-          [ "$(dig -p 1053 +tcp +short @127.0.0.1 prod.example.com)" = "192.168.0.3" ]
+          DEV_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dev.example.com)
+          echo "dev.example.com -> $DEV_RESP"
+          [ "$DEV_RESP" = "192.168.0.1" ]
+
+          TEST_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 test.example.com)
+          echo "test.example.com -> $TEST_RESP"
+          [ "$TEST_RESP" = "192.168.0.2" ]
+
+          PROD_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 prod.example.com)
+          echo "prod.example.com -> $PROD_RESP"
+          [ "$PROD_RESP" = "192.168.0.3" ]
 
       - name: Check CNAME record
         run: |
-          [ "$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)" = "192.168.0.3" ]
+          CNAME_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 CNAME dummy.example.com)
+          echo "CNAME dummy.example.com -> $CNAME_RESP"
+          [ "$CNAME_RESP" = "prod.example.com." ]
+
+          FULL_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)
+          echo "dummy.example.com full response:"
+          echo "$FULL_RESP"
+          [ "$(echo "$FULL_RESP" | head -n 1)" = "prod.example.com." ]
+          [ "$(echo "$FULL_RESP" | tail -n 1)" = "192.168.0.3" ]
 
       - name: Check healthcheck status
         run: |

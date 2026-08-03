@@ -75,3 +75,9 @@ jobs:
           TARGET_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$ALIAS_RESP")
           echo "$ALIAS_RESP -> $TARGET_RESP"
           [ "$TARGET_RESP" = "$PROD_IP" ]
+
+      - name: Check Public DNS forwarding
+        run: |
+          PUBLIC_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 github.com)
+          echo "github.com -> $PUBLIC_RESP"
+          [ -n "$PUBLIC_RESP" ]

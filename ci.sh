@@ -16,7 +16,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "1. Building Docker image..."
-docker build -t dnsmasq-container .
+docker build --progress=plain -t dnsmasq-container .
 echo
 
 echo "2. Cleaning up any existing container..."

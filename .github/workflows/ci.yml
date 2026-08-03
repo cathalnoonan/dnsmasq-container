@@ -50,11 +50,13 @@ jobs:
           echo "CNAME dummy.example.com -> $CNAME_RESP"
           [ "$CNAME_RESP" = "prod.example.com." ]
 
-          FULL_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)
-          echo "dummy.example.com full response:"
-          echo "$FULL_RESP"
-          [ "$(echo "$FULL_RESP" | head -n 1)" = "prod.example.com." ]
-          [ "$(echo "$FULL_RESP" | tail -n 1)" = "192.168.0.3" ]
+          ALIAS_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)
+          echo "dummy.example.com -> $ALIAS_RESP"
+          [ "$ALIAS_RESP" = "prod.example.com." ]
+
+          TARGET_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$ALIAS_RESP")
+          echo "$ALIAS_RESP -> $TARGET_RESP"
+          [ "$TARGET_RESP" = "192.168.0.3" ]
 
       - name: Check healthcheck status
         run: |

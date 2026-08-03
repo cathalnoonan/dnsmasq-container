@@ -11,6 +11,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      PROD_DOMAIN: prod.example.com
+      PROD_IP: 192.168.0.3
     steps:
       - uses: actions/checkout@v7
 
@@ -24,6 +27,8 @@ jobs:
             --name dnsmasq \
             -p 1053:53/udp \
             -p 1053:53/tcp \
+            -e PROD_DOMAIN \
+            -e PROD_IP \
             -v $(pwd)/sample/templates:/opt/dnsmasq/templates \
             dnsmasq-container
 
@@ -31,7 +36,7 @@ jobs:
         run: |
           sleep 15
 
-      - name: Check A records
+      - name: Check A records (without variable substitution)
         run: |
           DEV_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dev.example.com)
           echo "dev.example.com -> $DEV_RESP"
@@ -41,23 +46,25 @@ jobs:
           echo "test.example.com -> $TEST_RESP"
           [ "$TEST_RESP" = "192.168.0.2" ]
 
-          PROD_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 prod.example.com)
-          echo "prod.example.com -> $PROD_RESP"
-          [ "$PROD_RESP" = "192.168.0.3" ]
+      - name: Check A records (with variable substitution)
+        run: |
+          PROD_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$PROD_DOMAIN")
+          echo "$PROD_DOMAIN -> $PROD_RESP"
+          [ "$PROD_RESP" = "$PROD_IP" ]
 
-      - name: Check CNAME record
+      - name: Check CNAME record (with variable substitution)
         run: |
           CNAME_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 CNAME dummy.example.com)
           echo "CNAME dummy.example.com -> $CNAME_RESP"
-          [ "$CNAME_RESP" = "prod.example.com." ]
+          [ "$CNAME_RESP" = "${PROD_DOMAIN}." ]
 
           ALIAS_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)
           echo "dummy.example.com -> $ALIAS_RESP"
-          [ "$ALIAS_RESP" = "prod.example.com." ]
+          [ "$ALIAS_RESP" = "${PROD_DOMAIN}." ]
 
           TARGET_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$ALIAS_RESP")
           echo "$ALIAS_RESP -> $TARGET_RESP"
-          [ "$TARGET_RESP" = "192.168.0.3" ]
+          [ "$TARGET_RESP" = "$PROD_IP" ]
 
       - name: Check healthcheck status
         run: |

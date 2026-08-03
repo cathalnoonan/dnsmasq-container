@@ -25,6 +25,8 @@ jobs:
         run: |
           docker run -d \
             --name dnsmasq \
+            --health-interval 1s \
+            --health-start-period 0s \
             -p 1053:53/udp \
             -p 1053:53/tcp \
             -e PROD_DOMAIN \
@@ -32,9 +34,17 @@ jobs:
             -v $(pwd)/sample/templates:/opt/dnsmasq/templates \
             dnsmasq-container
 
-      - name: Sleep to allow container to start & healthcheck to run
+      - name: Wait for container to be healthy
         run: |
-          sleep 15
+          for i in $(seq 1 15); do
+            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' dnsmasq)
+            echo "Container health status ($i/15): $STATUS"
+            if [ "$STATUS" = '"healthy"' ]; then
+              break
+            fi
+            sleep 1
+          done
+          [ "$STATUS" = '"healthy"' ]
 
       - name: Check A records (without variable substitution)
         run: |
@@ -65,9 +75,3 @@ jobs:
           TARGET_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$ALIAS_RESP")
           echo "$ALIAS_RESP -> $TARGET_RESP"
           [ "$TARGET_RESP" = "$PROD_IP" ]
-
-      - name: Check healthcheck status
-        run: |
-          STATUS=$(docker inspect --format='{{json .State.Health.Status}}' dnsmasq)
-          echo "Container health status: $STATUS"
-          [ "$STATUS" = '"healthy"' ]

@@ -6,18 +6,21 @@ RUN apk add --no-cache \
         envsubst \
     && adduser -D -H -s /sbin/nologin dnsuser
 
-# Work in /opt/dnsmasq dir so dnsuser won't need root
-RUN mkdir -p /opt/dnsmasq/dnsmasq.conf.d/ \
-    && chown -R dnsuser:dnsuser /opt/dnsmasq
+ENV DNSMASQ_ROOT_DIRECTORY=/opt/dnsmasq
+ENV DNSMASQ_TEMPLATE_DIRECTORY=${DNSMASQ_ROOT_DIRECTORY}/templates
+
+# Work in ${DNSMASQ_ROOT_DIRECTORY} dir so dnsuser won't need root
+RUN mkdir -p ${DNSMASQ_ROOT_DIRECTORY}/dnsmasq.conf.d/ \
+    && chown -R dnsuser:dnsuser ${DNSMASQ_ROOT_DIRECTORY}
 
 USER dnsuser
 
-ENV UPSTREAM_DNS_1=8.8.8.8
-ENV UPSTREAM_DNS_2=1.1.1.1
 ENV HEALTHCHECK_INTERNAL_DOMAIN_NAME=
 ENV HEALTHCHECK_EXTERNAL_DOMAIN_NAME=google.com
+ENV UPSTREAM_DNS_1=8.8.8.8
+ENV UPSTREAM_DNS_2=1.1.1.1
 
-WORKDIR /opt/dnsmasq/
+WORKDIR ${DNSMASQ_ROOT_DIRECTORY}
 
 # Copy configs
 COPY --chown=dnsuser:dnsuser entrypoint.sh /entrypoint.sh

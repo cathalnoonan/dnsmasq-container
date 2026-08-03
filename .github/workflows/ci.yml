@@ -5,6 +5,8 @@ on:
     branches:
       - '**'
 
+# Note: GitHub actions uses localhost's port 53 already; so we need to use a different port (i.e. 1053 below)
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -19,8 +21,8 @@ jobs:
         run: |
           docker run -d \
             --name dnsmasq \
-            -p 53:53/udp \
-            -p 53:53/tcp \
+            -p 1053:53/udp \
+            -p 1053:53/tcp \
             -v $(pwd)/sample/templates:/opt/dnsmasq/templates \
             dnsmasq-container
 
@@ -30,13 +32,13 @@ jobs:
 
       - name: Check A records
         run: |
-          [ "$(dig +tcp +short @127.0.0.1 dev.example.com)" = "192.168.0.1" ]
-          [ "$(dig +tcp +short @127.0.0.1 test.example.com)" = "192.168.0.2" ]
-          [ "$(dig +tcp +short @127.0.0.1 prod.example.com)" = "192.168.0.3" ]
+          [ "$(dig -p 1053 +tcp +short @127.0.0.1 dev.example.com)" = "192.168.0.1" ]
+          [ "$(dig -p 1053 +tcp +short @127.0.0.1 test.example.com)" = "192.168.0.2" ]
+          [ "$(dig -p 1053 +tcp +short @127.0.0.1 prod.example.com)" = "192.168.0.3" ]
 
       - name: Check CNAME record
         run: |
-          [ "$(dig +tcp +short @127.0.0.1 dummy.example.com)" = "192.168.0.3" ]
+          [ "$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)" = "192.168.0.3" ]
 
       - name: Check healthcheck status
         run: |

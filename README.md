@@ -55,8 +55,8 @@ docker run -d \
 
 | Variable | Default Value | Description |
 |---|---|---|
-| `TEMPLATE_ROOT` | `/opt/dnsmasq/templates` | Path to template directory containing `.conf` files to process. |
-| `DESTINATION_ROOT` | `/opt/dnsmasq` | Path where rendered configuration files will be written. |
+| `DNSMASQ_ROOT_DIRECTORY` | `/opt/dnsmasq` | Path where rendered configuration files will be written. |
+| `DNSMASQ_TEMPLATE_DIRECTORY` | `/opt/dnsmasq/templates` | Path to template directory containing `.conf` files to process. |
 | `UPSTREAM_DNS_1` | `8.8.8.8` | Primary upstream DNS server IP. |
 | `UPSTREAM_DNS_2` | `1.1.1.1` | Secondary upstream DNS server IP. |
 | `HEALTHCHECK_INTERNAL_DOMAIN_NAME` | *(empty)* | Optional domain name to verify internal DNS record resolution during health checks. |
@@ -64,7 +64,7 @@ docker run -d \
 
 ### Environment Variable Substitution (`envsubst`)
 
-Any `.conf` files in `$TEMPLATE_ROOT` (including subdirectories such as `dnsmasq.conf.d/`) are processed with `envsubst` during container startup.
+Any `.conf` files in `$DNSMASQ_TEMPLATE_DIRECTORY` (including subdirectories such as `dnsmasq.conf.d/`) are processed with `envsubst` during container startup.
 
 For example, if your template file contains:
 

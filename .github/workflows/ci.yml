@@ -11,73 +11,10 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    env:
-      PROD_DOMAIN: prod.example.com
-      PROD_IP: 192.168.0.3
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build Docker image
+      - name: Run CI script
         run: |
-          docker build -t dnsmasq-container .
-
-      - name: Run container (detached)
-        run: |
-          docker run -d \
-            --name dnsmasq \
-            --health-interval 1s \
-            --health-start-period 0s \
-            -p 1053:53/udp \
-            -p 1053:53/tcp \
-            -e PROD_DOMAIN \
-            -e PROD_IP \
-            -v $(pwd)/sample/templates:/opt/dnsmasq/templates \
-            dnsmasq-container
-
-      - name: Wait for container to be healthy
-        run: |
-          for i in $(seq 1 15); do
-            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' dnsmasq)
-            echo "Container health status ($i/15): $STATUS"
-            if [ "$STATUS" = '"healthy"' ]; then
-              break
-            fi
-            sleep 1
-          done
-          [ "$STATUS" = '"healthy"' ]
-
-      - name: Check A records (without variable substitution)
-        run: |
-          DEV_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dev.example.com)
-          echo "dev.example.com -> $DEV_RESP"
-          [ "$DEV_RESP" = "192.168.0.1" ]
-
-          TEST_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 test.example.com)
-          echo "test.example.com -> $TEST_RESP"
-          [ "$TEST_RESP" = "192.168.0.2" ]
-
-      - name: Check A records (with variable substitution)
-        run: |
-          PROD_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$PROD_DOMAIN")
-          echo "$PROD_DOMAIN -> $PROD_RESP"
-          [ "$PROD_RESP" = "$PROD_IP" ]
-
-      - name: Check CNAME record (with variable substitution)
-        run: |
-          CNAME_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 CNAME dummy.example.com)
-          echo "CNAME dummy.example.com -> $CNAME_RESP"
-          [ "$CNAME_RESP" = "${PROD_DOMAIN}." ]
-
-          ALIAS_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 dummy.example.com)
-          echo "dummy.example.com -> $ALIAS_RESP"
-          [ "$ALIAS_RESP" = "${PROD_DOMAIN}." ]
-
-          TARGET_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 "$ALIAS_RESP")
-          echo "$ALIAS_RESP -> $TARGET_RESP"
-          [ "$TARGET_RESP" = "$PROD_IP" ]
-
-      - name: Check Public DNS forwarding
-        run: |
-          PUBLIC_RESP=$(dig -p 1053 +tcp +short @127.0.0.1 github.com)
-          echo "github.com -> $PUBLIC_RESP"
-          [ -n "$PUBLIC_RESP" ]
+          chmod +x ./ci.sh
+          ./ci.sh

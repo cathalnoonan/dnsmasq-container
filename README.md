@@ -57,6 +57,8 @@ docker run -d \
 |---|---|---|
 | `TEMPLATE_ROOT` | `/opt/dnsmasq/templates` | Path to template directory containing `.conf` files to process. |
 | `DESTINATION_ROOT` | `/opt/dnsmasq` | Path where rendered configuration files will be written. |
+| `UPSTREAM_DNS_1` | `8.8.8.8` | Primary upstream DNS server IP. |
+| `UPSTREAM_DNS_2` | `1.1.1.1` | Secondary upstream DNS server IP. |
 | `HEALTHCHECK_INTERNAL_DOMAIN_NAME` | *(empty)* | Optional domain name to verify internal DNS record resolution during health checks. |
 | `HEALTHCHECK_EXTERNAL_DOMAIN_NAME` | `google.com` | Set to any domain (e.g. `google.com`) to verify external domain resolution during health checks, or leave empty to opt-out. |
 

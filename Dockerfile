@@ -11,8 +11,12 @@ RUN mkdir -p /opt/dnsmasq/dnsmasq.conf.d/ \
     && chown -R dnsuser:dnsuser /opt/dnsmasq
 
 USER dnsuser
+
+ENV UPSTREAM_DNS_1=8.8.8.8
+ENV UPSTREAM_DNS_2=1.1.1.1
 ENV HEALTHCHECK_INTERNAL_DOMAIN_NAME=
 ENV HEALTHCHECK_EXTERNAL_DOMAIN_NAME=google.com
+
 WORKDIR /opt/dnsmasq/
 
 # Copy configs
